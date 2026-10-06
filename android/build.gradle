@@ -1,3 +1,16 @@
+buildscript {
+    ext.kotlin_version = '1.9.22'
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.2.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.google.gms:google-services:4.4.1'
+    }
+}
+
 allprojects {
     repositories {
         google()
@@ -5,12 +18,38 @@ allprojects {
     }
 }
 
+rootProject.ext {
+    set("compileSdkVersion", 34)
+    set("minSdkVersion", 24)
+    set("targetSdkVersion", 34)
+    set("flutter", [
+        compileSdkVersion: 34,
+        minSdkVersion: 24,
+        targetSdkVersion: 34,
+        ndkVersion: "26.1.10909125"
+    ])
+}
+
 rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
+
 subprojects {
     project.evaluationDependsOn(":app")
+}
+
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android {
+                compileSdkVersion 34
+                if (namespace == null && project.hasProperty('group')) {
+                    namespace project.group
+                }
+            }
+        }
+    }
 }
 
 tasks.register("clean", Delete) {
