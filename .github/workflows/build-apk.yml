@@ -26,11 +26,12 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+          cache: 'gradle'
 
       - name: Set up Flutter Environment
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          flutter-version: '3.24.5'
           cache: true
 
       - name: Verify Flutter & System Environment
@@ -87,8 +88,8 @@ jobs:
             - ⚡ **Speed Controls**: 0.5x, 0.75x, 1.0x, 1.25x, 1.5x, 2.0x playback speed presets.
             - 🤖 **AI Director**: Creative assistance, shot analysis, and automated editing commands.
 
-            ### 📲 Installation:
-            Download `CineCut-Pro-Release.apk` below and install it directly on your Android phone or tablet.
+            ### 📲 Direct Installation:
+            Download `CineCut-Pro-Release.apk` below and install it directly on your Android device.
           files: |
             build/app/outputs/flutter-apk/CineCut-Pro-Release.apk
             build/app/outputs/flutter-apk/app-release.apk
