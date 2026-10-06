@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "112437857145",
+    "firebase_url": "https://zxh4streamv1-default-rtdb.firebaseio.com",
+    "project_id": "zxh4streamv1",
+    "storage_bucket": "zxh4streamv1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:112437857145:android:3b242626e732727eb4fda8",
+        "android_client_info": {
+          "package_name": "com.zxh4stream.online"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "112437857145-jab1tvbet1nc8npn82r4v2v82lhneh8r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXDj80qck_BCtyl32sbkHxQU4qGUYZMrk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "112437857145-1bnofsto61v89ftr385j4dgd1pjqbnqc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

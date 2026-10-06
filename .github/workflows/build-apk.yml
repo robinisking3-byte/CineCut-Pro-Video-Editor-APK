@@ -1,0 +1,96 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build & Release Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java Development Kit (JDK 17)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter Environment
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Verify Flutter & System Environment
+        run: |
+          flutter --version
+          java -version
+
+      - name: Install Project Dependencies
+        run: flutter pub get
+
+      - name: Build Android Release APK
+        run: flutter build apk --release
+
+      - name: Verify Built APK Output
+        run: |
+          ls -la build/app/outputs/flutter-apk/
+          cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/CineCut-Pro-Release.apk
+
+      - name: Upload APK as Workflow Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CineCut-Pro-Release-APK
+          path: build/app/outputs/flutter-apk/CineCut-Pro-Release.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish GitHub Release with APK
+        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+        with:
+          tag_name: v1.0.0
+          name: "CineCut Pro v1.0.0 - Android APK"
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            ## 🎬 CineCut Pro Mobile Video Editor v1.0.0
+
+            Production Android APK build generated automatically by GitHub Actions CI/CD.
+
+            ### ✨ Core Features:
+            - ✂️ **Precision Trimming**: Interactive dual-handle trim slider with millisecond accuracy and in/out snapping to playhead.
+            - ✂️ **Clip Splitting**: Multi-segment scissor splitting with boundary safety.
+            - 🔗 **Clip Merging**: Seamless adjacent clip merging & master sequence timeline consolidation.
+            - 🎨 **Visual Filters (Real-Time GPU Color Grading)**:
+              - Black & White (Monochrome)
+              - Sepia Vintage
+              - Retro 70s Cinema
+              - Vivid Pop Saturation
+              - Cool Cyan Teal
+              - Golden Hour Sunset
+              - Film Noir High Contrast
+              - Negative Invert
+            - ⚡ **Speed Controls**: 0.5x, 0.75x, 1.0x, 1.25x, 1.5x, 2.0x playback speed presets.
+            - 🤖 **AI Director**: Creative assistance, shot analysis, and automated editing commands.
+
+            ### 📲 Installation:
+            Download `CineCut-Pro-Release.apk` below and install it directly on your Android phone or tablet.
+          files: |
+            build/app/outputs/flutter-apk/CineCut-Pro-Release.apk
+            build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
