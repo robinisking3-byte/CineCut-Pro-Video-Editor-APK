@@ -9,11 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  webview_flutter: ^4.10.0
-  webview_flutter_android: ^3.16.9
-  url_launcher: ^6.3.1
-  shared_preferences: ^2.3.3
-  http: ^1.2.2
+  webview_flutter: ^4.9.0
+  url_launcher: ^6.3.0
+  shared_preferences: ^2.2.3
 
 dev_dependencies:
   flutter_test:
