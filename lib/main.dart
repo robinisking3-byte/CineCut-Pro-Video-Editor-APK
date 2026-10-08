@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -111,7 +112,7 @@ class _CineCutHomeScreenState extends State<CineCutHomeScreen> {
           }
 
           request.response.headers.add('Access-Control-Allow-Origin', '*');
-          request.response.headers.add('Cache-Control', 'public, max-age=3600');
+          request.response.headers.add('Cache-Control', 'public, max-age=31536000, immutable');
           request.response.add(bytes);
           await request.response.close();
         } catch (_) {
@@ -134,9 +135,24 @@ class _CineCutHomeScreenState extends State<CineCutHomeScreen> {
 
       final controller = WebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..setUserAgent('Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36')
         ..setBackgroundColor(const Color(0xFF05060A))
         ..setNavigationDelegate(
           NavigationDelegate(
+            onNavigationRequest: (NavigationRequest request) {
+              final url = request.url;
+              // Allow all internal loopback requests
+              if (url.startsWith('http://127.0.0.1') || url.startsWith('http://localhost')) {
+                return NavigationDecision.navigate;
+              }
+              // Prevent external pages from breaking the app, open in external device browser
+              try {
+                launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+              } catch (e) {
+                debugPrint('External link launch note: $e');
+              }
+              return NavigationDecision.prevent;
+            },
             onProgress: (int progress) {
               if (mounted) {
                 setState(() {

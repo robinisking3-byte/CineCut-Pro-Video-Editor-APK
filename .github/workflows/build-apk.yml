@@ -62,27 +62,27 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
         with:
-          tag_name: v1.2.0
-          name: "CineCut Pro v1.2.0 - Latest Standalone Android APK"
+          tag_name: v1.3.0
+          name: "CineCut Pro v1.3.0 - High Performance Android APK (60FPS & Fixed Google Auth)"
           draft: false
           prerelease: false
           generate_release_notes: true
           body: |
-            ## 🎬 CineCut Pro Studio Android APK (Latest v1.2.0)
+            ## 🎬 CineCut Pro Studio Android APK (Latest v1.3.0)
 
-            Latest standalone production Android APK for CineCut Studio. Built with embedded offline local runtime — zero cloud URL dependencies, no 404s, works offline and connects to real-time Firebase backend.
+            High-performance, lag-free Android APK for CineCut Studio. Built with hardware-accelerated rendering (60FPS), large memory heap, embedded offline local runtime, and fixed Google Authentication.
 
-            ### ✨ Core Features:
-            - 🚪 **Account Logout & Authentication**: Dedicated Logout option in Navbar & Profile with confirmation modal.
-            - 🎬 **Multi-Track Video Editing Studio**: Timeline trimming, split, merge, audio tracks, 15+ LUTs & visual filters.
-            - 📺 **Live TV Broadcaster & Viewer**: 4K live streams and realtime chat synchronized with Firestore.
-            - 👥 **CineRooms**: Real-time collaborative workspace with room codes.
-            - 💎 **7-Day Free Trial & Subscription Plans**: Pre-activated trial, VIP/Diamond/Founder passes.
-            - 💳 **UPI Payment & UTR Processing**: Direct instant payment and verification.
-            - 🛡️ **Admin Center**: Real-time User Management, live TV management, and ad system.
+            ### 🚀 What's New in v1.3.0:
+            - ⚡ **Silky-Smooth 60FPS Performance**: Eliminated heavy Gaussian blur and continuous GPU animations. Added hardware acceleration and large memory heap (`largeHeap=true`) for fluid video timeline editing and canvas playback.
+            - 🔑 **Fixed Google Authentication**: Solved embedded WebView 400 "Request sent is invalid" error. Seamless in-app Google Account Picker with 1-Tap Robin (Founder & Super Admin) login and custom @gmail.com support.
+            - 🚀 **1-Tap Guest / Tester Pass**: Free 7-Day instant VIP access for easy sharing with friends on Android phones (no signup needed).
+            - 📲 **Native Share & APK Download**: In-app "Share App" modal with direct link copying and native Android system share sheet.
+            - 🚪 **Account Logout**: Dedicated logout actions in Navbar and Profile with confirmation dialog.
+            - 🎬 **Multi-Track Video Studio**: 4K timeline, trim, split, merge, 15+ LUTs, and audio tracks.
+            - 📺 **CineLive TV & CineRooms**: Real-time collaborative workspace and 4K broadcasts.
 
             ### 📲 Direct Installation:
-            Download `CineCut-Pro-Release.apk` below and install directly on Android.
+            Download `CineCut-Pro-Release.apk` below and install directly on any Android device.
           files: |
             build/app/outputs/flutter-apk/CineCut-Pro-Release.apk
             build/app/outputs/flutter-apk/app-release.apk
