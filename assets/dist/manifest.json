@@ -1,0 +1,33 @@
+{
+  "id": "/",
+  "name": "CineCut - Professional AI Video Editor & Studio",
+  "short_name": "CineCut Pro",
+  "description": "Professional multi-track video editor with AI Director, 4K timeline, Live TV streaming, and CineRooms.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#05060a",
+  "background_color": "#05060a",
+  "categories": ["video", "productivity", "multimedia", "entertainment"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

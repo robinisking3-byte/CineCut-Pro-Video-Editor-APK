@@ -34,6 +34,11 @@ jobs:
           flutter-version: '3.24.5'
           cache: true
 
+      - name: Verify Flutter & System Environment
+        run: |
+          flutter --version
+          java -version
+
       - name: Install Project Dependencies
         run: flutter pub get
 
@@ -57,26 +62,27 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
         with:
-          tag_name: v1.1.0
-          name: "CineCut Pro v1.1.0 - Latest Android APK"
+          tag_name: v1.2.0
+          name: "CineCut Pro v1.2.0 - Latest Standalone Android APK"
           draft: false
           prerelease: false
           generate_release_notes: true
           body: |
-            ## 🎬 CineCut Pro Studio Android APK (Latest v1.1.0)
+            ## 🎬 CineCut Pro Studio Android APK (Latest v1.2.0)
 
-            Latest official production Android APK for CineCut Studio. Built directly from our latest release.
+            Latest standalone production Android APK for CineCut Studio. Built with embedded offline local runtime — zero cloud URL dependencies, no 404s, works offline and connects to real-time Firebase backend.
 
-            ### ✨ Features Included:
-            - 🎬 **Multi-Track Video Editing Studio**: Timeline trimming, split, merge, 15+ LUTs & visual filters.
-            - 📺 **Live TV Broadcaster & Viewer**: 4K live streams and realtime chat synced with Firestore.
-            - 💎 **7-Day Free Trial & Default Free Plan**: Pre-activated on accounts.
+            ### ✨ Core Features:
+            - 🚪 **Account Logout & Authentication**: Dedicated Logout option in Navbar & Profile with confirmation modal.
+            - 🎬 **Multi-Track Video Editing Studio**: Timeline trimming, split, merge, audio tracks, 15+ LUTs & visual filters.
+            - 📺 **Live TV Broadcaster & Viewer**: 4K live streams and realtime chat synchronized with Firestore.
+            - 👥 **CineRooms**: Real-time collaborative workspace with room codes.
+            - 💎 **7-Day Free Trial & Subscription Plans**: Pre-activated trial, VIP/Diamond/Founder passes.
             - 💳 **UPI Payment & UTR Processing**: Direct instant payment and verification.
-            - 🛡️ **Admin Center**: Realtime User Management, live TV management, and coin dispatch.
-            - 🚪 **Account Logout & Device Session Control**: Secure authentication switcher.
+            - 🛡️ **Admin Center**: Real-time User Management, live TV management, and ad system.
 
-            ### 📲 Direct Download:
-            Click below to download `CineCut-Pro-Release.apk` and install directly on Android.
+            ### 📲 Direct Installation:
+            Download `CineCut-Pro-Release.apk` below and install directly on Android.
           files: |
             build/app/outputs/flutter-apk/CineCut-Pro-Release.apk
             build/app/outputs/flutter-apk/app-release.apk

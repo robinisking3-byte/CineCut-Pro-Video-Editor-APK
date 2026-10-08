@@ -1,7 +1,7 @@
 name: cinecut
 description: "CineCut - Professional Video Editor with AI Director, Firebase, and CineLive"
 publish_to: 'none'
-version: 1.1.0+2
+version: 1.2.0+3
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -20,3 +20,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/dist/
+    - assets/dist/assets/

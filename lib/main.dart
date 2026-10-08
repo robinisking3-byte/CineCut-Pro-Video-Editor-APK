@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -5,7 +6,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Full screen portrait & landscape for cinematic editor
+  // Full screen portrait & landscape for pro video editing
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.landscapeLeft,
@@ -29,7 +30,7 @@ class CineCutApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'CineCut Studio',
+      title: 'CineCut Studio Pro',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: const Color(0xFF05060A),
@@ -38,77 +39,154 @@ class CineCutApp extends StatelessWidget {
           surface: Color(0xFF09090B),
         ),
       ),
-      home: const CineCutWebViewScreen(),
+      home: const CineCutHomeScreen(),
     );
   }
 }
 
-class CineCutWebViewScreen extends StatefulWidget {
-  const CineCutWebViewScreen({super.key});
+class CineCutHomeScreen extends StatefulWidget {
+  const CineCutHomeScreen({super.key});
 
   @override
-  State<CineCutWebViewScreen> createState() => _CineCutWebViewScreenState();
+  State<CineCutHomeScreen> createState() => _CineCutHomeScreenState();
 }
 
-class _CineCutWebViewScreenState extends State<CineCutWebViewScreen> {
-  late final WebViewController _controller;
+class _CineCutHomeScreenState extends State<CineCutHomeScreen> {
+  WebViewController? _controller;
+  HttpServer? _server;
+  int _port = 0;
   bool _isLoading = true;
   double _progress = 0;
   String? _errorMessage;
 
-  static const String appUrl =
-      'https://ais-pre-2kt5kr7vbmalqzycgw3eay-776276684314.asia-southeast1.run.app';
-
   @override
   void initState() {
     super.initState();
-    _initWebViewController();
+    _startServerAndLoad();
   }
 
-  void _initWebViewController() {
-    final WebViewController controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(const Color(0xFF05060A))
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onProgress: (int progress) {
-            setState(() {
-              _progress = progress / 100.0;
-            });
-          },
-          onPageStarted: (String url) {
-            setState(() {
-              _isLoading = true;
-              _errorMessage = null;
-            });
-          },
-          onPageFinished: (String url) {
-            setState(() {
-              _isLoading = false;
-            });
-          },
-          onWebResourceError: (WebResourceError error) {
-            debugPrint('WebView resource error: ${error.description}');
-            if (error.isForMainFrame ?? true) {
-              setState(() {
-                _isLoading = false;
-                _errorMessage = error.description;
-              });
-            }
-          },
-        ),
-      )
-      ..loadRequest(Uri.parse(appUrl));
+  @override
+  void dispose() {
+    _server?.close(force: true);
+    super.dispose();
+  }
 
-    _controller = controller;
+  Future<void> _startServerAndLoad() async {
+    try {
+      // Start local embedded server on loopback IPv4
+      _server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      _port = _server!.port;
+
+      _server!.listen((HttpRequest request) async {
+        String path = request.uri.path;
+        if (path == '/' || path.isEmpty) {
+          path = '/index.html';
+        }
+
+        // Clean path and build asset path
+        final cleanPath = path.startsWith('/') ? path.substring(1) : path;
+        final assetPath = 'assets/dist/$cleanPath';
+
+        try {
+          ByteData data = await rootBundle.load(assetPath);
+          final bytes = data.buffer.asUint8List();
+
+          // Set correct Content-Type header
+          if (cleanPath.endsWith('.html')) {
+            request.response.headers.contentType = ContentType('text', 'html', charset: 'utf-8');
+          } else if (cleanPath.endsWith('.js') || cleanPath.endsWith('.mjs')) {
+            request.response.headers.contentType = ContentType('application', 'javascript', charset: 'utf-8');
+          } else if (cleanPath.endsWith('.css')) {
+            request.response.headers.contentType = ContentType('text', 'css', charset: 'utf-8');
+          } else if (cleanPath.endsWith('.svg')) {
+            request.response.headers.contentType = ContentType('image', 'svg+xml');
+          } else if (cleanPath.endsWith('.json')) {
+            request.response.headers.contentType = ContentType('application', 'json', charset: 'utf-8');
+          } else if (cleanPath.endsWith('.png')) {
+            request.response.headers.contentType = ContentType('image', 'png');
+          } else if (cleanPath.endsWith('.jpg') || cleanPath.endsWith('.jpeg')) {
+            request.response.headers.contentType = ContentType('image', 'jpeg');
+          } else if (cleanPath.endsWith('.ico')) {
+            request.response.headers.contentType = ContentType('image', 'x-icon');
+          }
+
+          request.response.headers.add('Access-Control-Allow-Origin', '*');
+          request.response.headers.add('Cache-Control', 'public, max-age=3600');
+          request.response.add(bytes);
+          await request.response.close();
+        } catch (_) {
+          // SPA Fallback: return index.html for client-side routing
+          try {
+            ByteData fallbackData = await rootBundle.load('assets/dist/index.html');
+            request.response.headers.contentType = ContentType('text', 'html', charset: 'utf-8');
+            request.response.headers.add('Access-Control-Allow-Origin', '*');
+            request.response.add(fallbackData.buffer.asUint8List());
+            await request.response.close();
+          } catch (e) {
+            request.response.statusCode = HttpStatus.notFound;
+            request.response.write('Not found: $cleanPath');
+            await request.response.close();
+          }
+        }
+      });
+
+      final localUrl = 'http://127.0.0.1:$_port';
+
+      final controller = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..setBackgroundColor(const Color(0xFF05060A))
+        ..setNavigationDelegate(
+          NavigationDelegate(
+            onProgress: (int progress) {
+              if (mounted) {
+                setState(() {
+                  _progress = progress / 100.0;
+                });
+              }
+            },
+            onPageStarted: (String url) {
+              if (mounted) {
+                setState(() {
+                  _isLoading = true;
+                  _errorMessage = null;
+                });
+              }
+            },
+            onPageFinished: (String url) {
+              if (mounted) {
+                setState(() {
+                  _isLoading = false;
+                });
+              }
+            },
+            onWebResourceError: (WebResourceError error) {
+              debugPrint('WebView resource error: ${error.description}');
+            },
+          ),
+        )
+        ..loadRequest(Uri.parse(localUrl));
+
+      if (mounted) {
+        setState(() {
+          _controller = controller;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        if (await _controller.canGoBack()) {
-          await _controller.goBack();
+        if (_controller != null && await _controller!.canGoBack()) {
+          await _controller!.goBack();
           return false;
         }
         return true;
@@ -120,10 +198,9 @@ class _CineCutWebViewScreenState extends State<CineCutWebViewScreen> {
           bottom: false,
           child: Stack(
             children: [
-              // Real CineCut Studio WebView
-              WebViewWidget(controller: _controller),
+              if (_controller != null)
+                WebViewWidget(controller: _controller!),
 
-              // Animated Loading Screen on First Launch
               if (_isLoading)
                 Container(
                   color: const Color(0xFF05060A),
@@ -138,13 +215,13 @@ class _CineCutWebViewScreenState extends State<CineCutWebViewScreen> {
                             color: const Color(0xFF18181B),
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
-                              color: const Color(0xFFEAB308).withOpacity(0.3),
+                              color: const Color(0xFFEAB308).withOpacity(0.4),
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFEAB308).withOpacity(0.2),
-                                blurRadius: 20,
-                                spreadRadius: 2,
+                                color: const Color(0xFFEAB308).withOpacity(0.25),
+                                blurRadius: 24,
+                                spreadRadius: 3,
                               ),
                             ],
                           ),
@@ -152,7 +229,7 @@ class _CineCutWebViewScreenState extends State<CineCutWebViewScreen> {
                             child: Icon(
                               Icons.movie_creation_outlined,
                               color: Color(0xFFEAB308),
-                              size: 40,
+                              size: 42,
                             ),
                           ),
                         ),
@@ -161,22 +238,22 @@ class _CineCutWebViewScreenState extends State<CineCutWebViewScreen> {
                           'CineCut Pro Studio',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 20,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
                             letterSpacing: -0.5,
                           ),
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Loading latest workspace...',
+                          'Launching local studio engine...',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.6),
-                            fontSize: 12,
+                            color: Colors.white.withOpacity(0.65),
+                            fontSize: 13,
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 22),
                         SizedBox(
-                          width: 140,
+                          width: 150,
                           child: LinearProgressIndicator(
                             value: _progress > 0 ? _progress : null,
                             backgroundColor: Colors.white.withOpacity(0.1),
@@ -191,7 +268,6 @@ class _CineCutWebViewScreenState extends State<CineCutWebViewScreen> {
                   ),
                 ),
 
-              // Error fallback if offline
               if (_errorMessage != null)
                 Container(
                   color: const Color(0xFF05060A),
@@ -201,13 +277,13 @@ class _CineCutWebViewScreenState extends State<CineCutWebViewScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(
-                          Icons.wifi_off_rounded,
+                          Icons.error_outline_rounded,
                           color: Color(0xFFF43F5E),
-                          size: 48,
+                          size: 52,
                         ),
                         const SizedBox(height: 16),
                         const Text(
-                          'Network Connection Required',
+                          'Studio Launch Error',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -216,7 +292,7 @@ class _CineCutWebViewScreenState extends State<CineCutWebViewScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Could not connect to CineCut Cloud servers.\nPlease check your Internet and retry.',
+                          _errorMessage!,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.6),
@@ -230,10 +306,10 @@ class _CineCutWebViewScreenState extends State<CineCutWebViewScreen> {
                               _isLoading = true;
                               _errorMessage = null;
                             });
-                            _controller.reload();
+                            _startServerAndLoad();
                           },
                           icon: const Icon(Icons.refresh, size: 16),
-                          label: const Text('Retry Connection'),
+                          label: const Text('Restart Studio'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFEAB308),
                             foregroundColor: Colors.black,
